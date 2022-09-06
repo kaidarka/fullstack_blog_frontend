@@ -3,8 +3,19 @@ import Container from "@mui/material/Container";
 import { Header } from "./components";
 import { Home, FullPost, Registration, AddPost, Login } from "./pages";
 import {Route, Routes} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchAuthMe, selectIsAuth } from "./redux/slices/auth";
 
 function App() {
+  const dispatch = useDispatch();
+  const isAuth = useSelector(selectIsAuth);
+
+  useEffect(() => {
+    dispatch(fetchAuthMe());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <Header />
@@ -12,9 +23,10 @@ function App() {
        <Routes>
            <Route path="/" element={<Home />} />
            <Route path="/posts/:id" element={ <FullPost />} />
-           <Route path="/add-post" element={ <AddPost />} />
+           {isAuth && <Route path="/add-post" element={ <AddPost />} />}
            <Route path="/login" element={ <Login />} />
            <Route path="/register" element={ <Registration />} />
+           <Route element={<><h1>asd</h1></>} />
        </Routes>
       </Container>
     </>
