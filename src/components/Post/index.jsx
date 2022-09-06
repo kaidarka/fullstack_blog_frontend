@@ -1,4 +1,5 @@
 import React from "react";
+import { useDispatch } from "react-redux";
 import clsx from "clsx";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Clear";
@@ -11,6 +12,7 @@ import styles from "./Post.module.scss";
 import { UserInfo } from "../UserInfo";
 import { PostSkeleton } from "./Skeleton";
 import {Link} from "react-router-dom";
+import { fetchRemovePosts } from "../../redux/slices/posts";
 
 export const Post = ({
   _id,
@@ -26,6 +28,14 @@ export const Post = ({
   isLoading,
   isEditable,
 }) => {
+  const dispatch = useDispatch();
+
+  const onClickRemove = () => {
+    if (window.confirm('Вы действительно хотите удалить пост?')) {
+      dispatch(fetchRemovePosts(_id));
+
+    }
+  }
   if (isLoading) {
     return <PostSkeleton />;
   }
@@ -34,13 +44,13 @@ export const Post = ({
     <div className={clsx(styles.root, { [styles.rootFull]: isFullPost })}>
       {isEditable && (
         <div className={styles.editButtons}>
-          <Link to={`/posts/${_id}/edit`}>
+          <Link to={`/posts/edit/${_id}`}>
             <IconButton color="primary">
               <EditIcon />
             </IconButton>
           </Link>
 
-          <IconButton color="secondary">
+          <IconButton onClick={onClickRemove} color="secondary">
             <DeleteIcon />
           </IconButton>
         </div>

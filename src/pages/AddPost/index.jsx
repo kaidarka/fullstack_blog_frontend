@@ -1,20 +1,87 @@
-import React from "react";
+import { useRef, useState, useCallback, useMemo } from "react";
+import { useNavigate, useParams } from 'react-router-dom';
 import TextField from "@mui/material/TextField";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import SimpleMDE from "react-simplemde-editor";
+import axios from '../../axios';
 
 import "easymde/dist/easymde.min.css";
 import styles from "./AddPost.module.scss";
+import { useEffect } from "react";
 
 export const AddPost = () => {
-  const [value, setValue] = React.useState("");
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [text, setText] = useState("");
+  const [title, setTitle] = useState("");
+  const [tags, setTags] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onChange = React.useCallback((value) => {
-    setValue(value);
+  const isEditing = Boolean(id);
+
+  const inputFileRef = useRef(null);
+
+  useEffect(() => {
+    console.log(id);
+    if (id) {
+      axios.get(`/posts/${id}`)
+        .then(({ data }) => {
+          setText(data.text)
+          setTitle(data.title)
+          setTags(data.tags.join(','))
+          setImageUrl(data.imageUrl)
+        }).catch((err) => {
+          console.warn(err);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const options = React.useMemo(
+  const handleChangeFile = async (event) => {
+    try {
+      const formData = new FormData();
+      const file = event.target.files[0];
+      formData.append('image', file);
+      const { data } = await axios.post('/upload', formData);
+      setImageUrl(data.url);
+    } catch (error) {
+      console.warn(error);
+      alert('Ошибка при загрузке файла!');
+    }
+  };
+
+  const onClickRemoveImage = () => {
+    setImageUrl('');
+  }
+
+  const onChange = useCallback((value) => {
+    setText(value);
+  }, []);
+
+  const onSubmit = async () => {
+    try {
+      setIsLoading(true);
+      const preparedData = {
+        title,
+        imageUrl,
+        text,
+        tags: tags.split(','),
+      }
+      const { data } = isEditing
+        ? await axios.patch(`/posts/${id}`, preparedData)
+        : await axios.post('/posts', preparedData);
+      const _id = isEditing ? id : data._id;
+      navigate(`/posts/${_id}`);
+
+    } catch (error) {
+      console.warn(error);
+      alert('Ошибка при создании статьи!');
+    }
+  }
+
+  const options = useMemo(
     () => ({
       spellChecker: false,
       maxHeight: "400px",
@@ -31,34 +98,45 @@ export const AddPost = () => {
 
   return (
     <Paper style={{ padding: 30 }}>
-      <Button variant="outlined" size="large">
+      <Button onClick={() => inputFileRef.current.click()} variant="outlined" size="large">
         Загрузить превью
       </Button>
+      <input type="file" ref={inputFileRef} hidden onChange={handleChangeFile} />
+      {imageUrl && (
+        <>
+          <Button variant="contained" color="error" onClick={onClickRemoveImage}>Удалить</Button>
+          <img className={styles.image} src={`http://localhost:4444${imageUrl}`} alt={"Uploaded"} />
+        </>
+      )}
       <br />
       <br />
       <TextField
         classes={{ root: styles.title }}
         variant="standard"
         placeholder="Заголовок статьи..."
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         fullWidth
       />
       <TextField
         classes={{ root: styles.tags }}
         variant="standard"
         placeholder="Тэги"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
         fullWidth
       />
       <SimpleMDE
         className={styles.editor}
-        value={value}
+        value={text}
         onChange={onChange}
         options={options}
       />
       <div className={styles.buttons}>
-        <Button size="large" variant="contained">
-          Опубликовать
+        <Button onClick={onSubmit} size="large" variant="contained">
+          {isEditing ? 'Сохранить' : 'Опубликовать'}
         </Button>
-        <Button size="large">Отмена</Button>
+        <Button onClick={() => navigate('/')} size="large">Отмена</Button>
       </div>
     </Paper>
   );
