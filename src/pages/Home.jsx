@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Grid from "@mui/material/Grid";
@@ -13,25 +13,38 @@ export const Home = () => {
   const dispatch = useDispatch();
   const userData = useSelector(state => state.auth.data);
   const { posts, tags } = useSelector(state => state.posts);
+  const [sort, setSort] = useState('new');
 
   const isPostsLoading = posts.status === 'loading';
   const isTagsLoading = tags.status === 'loading';
 
   useEffect(() => {
-    dispatch(fetchPosts());
     dispatch(fetchTags());
     // eslint-disable-next-line
-  }, []);
+  }, [])
+
+  useEffect(() => {
+    const params = {
+      sort: sort === 'popular' ? '-viewsCount' : '-createdAt',
+    }
+    dispatch(fetchPosts(params));
+    // eslint-disable-next-line
+  }, [sort]);
+
+  const onChangeSort = (event, newValue) => {
+    setSort(newValue);
+  }
 
   return (
     <>
       <Tabs
         style={{ marginBottom: 15 }}
-        value={0}
+        value={sort}
         aria-label="basic tabs example"
+        onChange={onChangeSort}
       >
-        <Tab label="Новые" />
-        <Tab label="Популярные" />
+        <Tab value="new" label="Новые" />
+        <Tab value="popular" label="Популярные" />
       </Tabs>
       <Grid container spacing={4}>
         <Grid xs={8} item>

@@ -1,8 +1,10 @@
 import {createAsyncThunk, createSlice} from '@reduxjs/toolkit';
+import { stringify } from 'qs';
 import axios from "../../axios";
 
-export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
-    const { data } = await axios.get('/posts');
+export const fetchPosts = createAsyncThunk('posts/fetchPosts', async (params) => {
+    console.log(params)
+    const { data } = await axios.get(`/posts?${stringify(params, { arrayFormat: 'comma' })}`);
     return data;
 })
 
