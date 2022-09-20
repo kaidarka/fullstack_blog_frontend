@@ -3,7 +3,6 @@ import { stringify } from 'qs';
 import axios from "../../axios";
 
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async (params) => {
-    console.log(params)
     const { data } = await axios.get(`/posts?${stringify(params, { arrayFormat: 'comma' })}`);
     return data;
 })
@@ -17,12 +16,21 @@ export const fetchRemovePosts = createAsyncThunk('posts/fetchRemovePosts', async
     axios.delete(`/posts/${id}`);
 })
 
+export const fetchComments = createAsyncThunk('posts/fetchComments', async () => {
+    const { data } = await axios.get('/comments');
+    return data;
+})
+
 const initialState = {
     posts: {
         items: [],
         status: 'loading',
     },
     tags: {
+        items: [],
+        status: 'loading',
+    },
+    comments: {
         items: [],
         status: 'loading',
     },
@@ -62,7 +70,19 @@ const postsSlice = createSlice({
         },
         [fetchRemovePosts.rejected]: (state) => {
             state.posts.status = 'error';
-        }
+        },
+        [fetchComments.pending]: (state) => {
+            state.comments.items = [];
+            state.comments.status = 'loading';
+        },
+        [fetchComments.fulfilled]: (state, action) => {
+            state.comments.items = action.payload;
+            state.comments.status = 'loaded';
+        },
+        [fetchComments.rejected]: (state) => {
+            state.comments.items = [];
+            state.comments.status = 'error';
+        },
     }
 })
 

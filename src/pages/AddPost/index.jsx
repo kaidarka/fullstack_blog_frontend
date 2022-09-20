@@ -98,13 +98,13 @@ export const AddPost = () => {
 
   return (
     <Paper style={{ padding: 30 }}>
-      <Button onClick={() => inputFileRef.current.click()} variant="outlined" size="large">
+      <Button onClick={() => inputFileRef.current.click()} className={styles.buttons} variant="outlined" size="large">
         Загрузить превью
       </Button>
       <input type="file" ref={inputFileRef} hidden onChange={handleChangeFile} />
       {imageUrl && (
         <>
-          <Button variant="contained" color="error" onClick={onClickRemoveImage}>Удалить</Button>
+          <Button className={styles.buttons} variant="contained" color="error" onClick={onClickRemoveImage}>Удалить</Button>
           <img className={styles.image} src={`http://localhost:4444${imageUrl}`} alt={"Uploaded"} />
         </>
       )}
@@ -133,7 +133,7 @@ export const AddPost = () => {
         options={options}
       />
       <div className={styles.buttons}>
-        <Button onClick={onSubmit} size="large" variant="contained">
+        <Button disabled={isLoading} onClick={onSubmit} size="large" variant="contained">
           {isEditing ? 'Сохранить' : 'Опубликовать'}
         </Button>
         <Button onClick={() => navigate('/')} size="large">Отмена</Button>
